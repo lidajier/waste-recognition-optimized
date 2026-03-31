@@ -1,0 +1,30 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/waste_ai}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:lsx0630}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+app:
+  storage:
+    root-dir: ${STORAGE_ROOT:storage/uploads}
+  inference:
+    base-url: ${INFERENCE_BASE_URL:http://localhost:8001}
+  llm:
+    base-url: ${LLM_BASE_URL:http://localhost:8317/v1}
+    api-key: ${LLM_API_KEY:${OPENAI_API_KEY:lsx0630}}
+    model: ${LLM_MODEL:gpt-5.4}
+    temperature: ${LLM_TEMPERATURE:0.2}
+  auth:
+    jwt-secret: ${JWT_SECRET:waste-ai-demo-secret-change-me}
+    token-ttl-seconds: ${JWT_TTL_SECONDS:604800}
