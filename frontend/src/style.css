@@ -112,6 +112,71 @@ body {
 .brand-pill { background: #dcfce7; color: #0f766e; }
 .soft-badge { background: #ffffff; color: #0f766e; box-shadow: 0 6px 20px rgba(15, 118, 110, 0.08); }
 
+.sidebar-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding: 6px 2px 2px;
+}
+
+.sidebar-logo-mark {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-family: "Space Grotesk", "Noto Sans SC", sans-serif;
+  font-weight: 700;
+  background: linear-gradient(135deg, #34d399, #14b8a6);
+  box-shadow: 0 14px 30px rgba(20, 184, 166, 0.24);
+  overflow: hidden;
+}
+
+.sidebar-logo-dot {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.sidebar-logo-dot-a {
+  width: 20px;
+  height: 20px;
+  top: -2px;
+  right: -3px;
+}
+
+.sidebar-logo-dot-b {
+  width: 14px;
+  height: 14px;
+  bottom: 6px;
+  left: 6px;
+}
+
+.sidebar-logo-core {
+  position: relative;
+  z-index: 1;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.sidebar-logo-title {
+  font-family: "Space Grotesk", "Noto Sans SC", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sidebar-logo-subtitle {
+  margin-top: 4px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
 .nav-link {
   display: block;
   border-radius: 18px;

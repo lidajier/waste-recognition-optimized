@@ -31,6 +31,18 @@ function logout() {
 <template>
   <div class="app-wrap">
     <aside class="sidebar-card">
+      <div class="sidebar-logo-wrap">
+        <div class="sidebar-logo-mark" aria-hidden="true">
+          <span class="sidebar-logo-dot sidebar-logo-dot-a"></span>
+          <span class="sidebar-logo-dot sidebar-logo-dot-b"></span>
+          <span class="sidebar-logo-core">R</span>
+        </div>
+        <div>
+          <div class="sidebar-logo-title">垃圾识别</div>
+          <div class="sidebar-logo-subtitle">Recycling System</div>
+        </div>
+      </div>
+
       <nav class="space-y-2">
         <RouterLink v-for="item in navItems" :key="item.to" :to="item.to" class="nav-link">
           {{ item.label }}
