@@ -82,7 +82,7 @@ const workflows = [
       <h3 class="section-title">最近识别</h3>
       <div class="mt-5 space-y-3">
         <div v-for="item in store.overviewStats.value.recentActivities" :key="item.imageId" class="soft-panel">
-          <div class="text-sm font-semibold text-slate-900">{{ item.imageName }}</div>
+          <div class="recent-activity-name text-sm font-semibold text-slate-900" :title="item.imageName">{{ item.imageName }}</div>
           <div class="mt-2 text-xs text-slate-500">{{ item.topClass || '未识别' }} · {{ item.latencyMs ?? '--' }} ms</div>
           <div class="mt-2 text-xs text-slate-400">{{ store.formatDate(item.uploadedAt) }}</div>
         </div>

@@ -278,6 +278,12 @@ body {
   border: 0;
 }
 
+.recent-activity-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .viewer-mask {
   position: fixed;
   inset: 0;

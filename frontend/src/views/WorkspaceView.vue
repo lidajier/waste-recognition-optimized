@@ -1,13 +1,23 @@
 <script setup>
+import { nextTick, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAppStore } from "../composables/useAppStore";
 
 const router = useRouter();
 const store = useAppStore();
+const previewAnchor = ref(null);
+
+async function scrollToPreview() {
+  await nextTick();
+  previewAnchor.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 function onFileChange(event) {
   const file = event.target.files?.[0];
-  if (file) store.setFile(file);
+  if (file) {
+    store.setFile(file);
+    scrollToPreview();
+  }
 }
 
 function onPreviewLoad(event) {
@@ -81,7 +91,7 @@ async function generateAdvice() {
         <div class="soft-panel text-sm text-slate-600">已记录实验 {{ store.experimentRuns.value.length }} 组</div>
       </div>
 
-      <div class="mt-6 image-stage">
+      <div ref="previewAnchor" class="mt-6 image-stage">
         <div v-if="store.previewUrl.value" class="preview-canvas" :style="{ transform: `scale(${store.previewScale.value})` }">
           <img :src="store.previewUrl.value" class="max-h-[460px] max-w-full object-contain" @load="onPreviewLoad" />
 
