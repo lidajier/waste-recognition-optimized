@@ -21,14 +21,46 @@ const store = useAppStore();
           <div class="text-xs uppercase tracking-[0.22em] text-emerald-600">{{ store.formatDate(item.createdAt) }}</div>
           <div class="mt-3 text-lg font-semibold text-slate-900">{{ item.topClass }}</div>
           <div class="mt-2 space-y-2 text-sm text-slate-600">
-            <div>imgsz: {{ item.detectOptions.imgsz }}</div>
-            <div>conf: {{ item.detectOptions.conf }}</div>
-            <div>iou: {{ item.detectOptions.iou }}</div>
+            <div>imgsz: {{ item.imgsz }}</div>
+            <div>conf: {{ item.conf }}</div>
+            <div>iou: {{ item.iou }}</div>
             <div>boxCount: {{ item.boxCount }}</div>
             <div>latency: {{ item.latencyMs }} ms</div>
-            <div>filter conf: {{ item.filters.minConfidence }}</div>
+            <div>avg confidence: {{ store.formatPercent(item.avgConfidence) }}</div>
+            <div>filter conf: {{ item.minConfidenceFilter }}</div>
+            <div>keyword: {{ item.classKeywordFilter || '--' }}</div>
+            <div>备注: {{ item.note || '无' }}</div>
           </div>
         </div>
+      </div>
+
+      <div v-if="store.experimentRuns.value.length" class="mt-6 overflow-auto rounded-[24px] bg-white p-4 shadow-sm">
+        <table class="min-w-full text-left text-sm text-slate-600">
+          <thead>
+            <tr class="border-b border-slate-100 text-xs uppercase tracking-[0.18em] text-slate-400">
+              <th class="px-3 py-3">时间</th>
+              <th class="px-3 py-3">主类别</th>
+              <th class="px-3 py-3">imgsz</th>
+              <th class="px-3 py-3">conf</th>
+              <th class="px-3 py-3">iou</th>
+              <th class="px-3 py-3">目标数</th>
+              <th class="px-3 py-3">平均置信度</th>
+              <th class="px-3 py-3">时延</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in store.experimentRuns.value" :key="`${item.id}-row`" class="border-b border-slate-50">
+              <td class="px-3 py-3">{{ store.formatDate(item.createdAt) }}</td>
+              <td class="px-3 py-3">{{ item.topClass || '--' }}</td>
+              <td class="px-3 py-3">{{ item.imgsz }}</td>
+              <td class="px-3 py-3">{{ item.conf }}</td>
+              <td class="px-3 py-3">{{ item.iou }}</td>
+              <td class="px-3 py-3">{{ item.boxCount }}</td>
+              <td class="px-3 py-3">{{ store.formatPercent(item.avgConfidence) }}</td>
+              <td class="px-3 py-3">{{ item.latencyMs }} ms</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <div v-if="!store.experimentRuns.value.length" class="soft-panel mt-6 text-sm text-slate-500">

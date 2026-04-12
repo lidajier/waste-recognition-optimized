@@ -11,6 +11,13 @@ async function toggleFlag(item) {
   const note = item.flagged ? "" : window.prompt("请输入错误样本备注（可选）", item.reviewNote || "") ?? item.reviewNote;
   await store.toggleFlagged(item.imageId, !item.flagged, note);
 }
+
+async function editMeta(item) {
+  const reviewType = window.prompt("请输入错误类型：误检 / 漏检 / 类别混淆 / 低置信度", item.reviewType || "") ?? item.reviewType;
+  const correctedClass = window.prompt("请输入人工修正类别（可选）", item.correctedClass || "") ?? item.correctedClass;
+  const reviewNote = window.prompt("请输入补充备注（可选）", item.reviewNote || "") ?? item.reviewNote;
+  await store.updateReviewMeta(item.imageId, { reviewType, correctedClass, reviewNote, flagged: true });
+}
 </script>
 
 <template>
@@ -37,9 +44,12 @@ async function toggleFlag(item) {
               <span class="rounded-full bg-rose-100 px-2 py-1 text-xs text-rose-700">错误样本</span>
             </div>
             <div class="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-slate-600">{{ item.reviewNote || '暂无备注' }}</div>
+            <div class="mt-3 text-xs text-slate-500">错误类型：{{ item.reviewType || '未标注' }}</div>
+            <div class="mt-1 text-xs text-slate-500">人工修正：{{ item.correctedClass || '未填写' }}</div>
             <div class="mt-4 grid gap-3 sm:grid-cols-2">
               <button class="secondary-btn" @click="toggleFavorite(item)">{{ item.favorite ? '取消收藏' : '收藏样本' }}</button>
               <button class="secondary-btn" @click="toggleFlag(item)">取消错误标记</button>
+              <button class="secondary-btn sm:col-span-2" @click="editMeta(item)">编辑错误信息</button>
             </div>
           </div>
         </div>

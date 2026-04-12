@@ -10,5 +10,7 @@ import java.util.UUID;
 public interface ImageRepository extends JpaRepository<ImageEntity, UUID> {
     List<ImageEntity> findByUploadedBy_IdAndDeletedFalseOrderByUploadedAtDesc(UUID userId);
 
+    List<ImageEntity> findByUploadedBy_IdAndDeletedFalseAndFlaggedTrueOrderByUploadedAtDesc(UUID userId);
+
     Optional<ImageEntity> findByIdAndUploadedBy_IdAndDeletedFalse(UUID imageId, UUID userId);
 }

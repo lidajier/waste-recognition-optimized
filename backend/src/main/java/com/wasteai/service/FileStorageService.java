@@ -88,6 +88,12 @@ public class FileStorageService {
         if (request.reviewNote() != null) {
             image.setReviewNote(request.reviewNote().isBlank() ? null : request.reviewNote().trim());
         }
+        if (request.reviewType() != null) {
+            image.setReviewType(request.reviewType().isBlank() ? null : request.reviewType().trim());
+        }
+        if (request.correctedClass() != null) {
+            image.setCorrectedClass(request.correctedClass().isBlank() ? null : request.correctedClass().trim());
+        }
         return imageRepository.save(image);
     }
 

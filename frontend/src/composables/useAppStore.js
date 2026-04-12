@@ -1,13 +1,17 @@
 import { computed, ref } from "vue";
 import {
   clearToken,
+  createExperiment,
   deleteImage,
+  deleteExperiment,
   generateAdvice,
   getGallery,
   getHistory,
   getMe,
+  getOverviewStats,
   getSession,
   getToken,
+  listExperiments,
   login,
   register,
   runDetection,
@@ -16,6 +20,7 @@ import {
   updateImage,
   uploadImage
 } from "../lib/api";
+import { classifyWaste, confidenceHint, confidenceLevel } from "../lib/wasteMeta";
 
 const selectedFile = ref(null);
 const previewUrl = ref("");
@@ -40,7 +45,27 @@ const viewerItem = ref(null);
 const detectOptions = ref({ imgsz: 512, conf: 0.25, iou: 0.7 });
 const workspaceFilters = ref({ minConfidence: 0, classKeyword: "" });
 const previewScale = ref(1);
-const experimentRuns = ref(loadExperimentRuns());
+const experimentRuns = ref([]);
+const experimentNote = ref("");
+const overviewStats = ref({
+  totalImages: 0,
+  totalDetections: 0,
+  totalDetectedObjects: 0,
+  flaggedCount: 0,
+  favoriteCount: 0,
+  avgLatencyMs: 0,
+  topClass: "暂无数据",
+  topClasses: [],
+  recentActivities: []
+});
+const galleryFilters = ref({
+  keyword: "",
+  className: "",
+  favorite: "",
+  flagged: "",
+  reviewType: "",
+  minConfidence: 0
+});
 
 const BOX_COLORS = ["#52c7a5", "#ffbf69", "#6ea8fe", "#ff8a8a", "#b692ff", "#66d9ef"];
 const GALLERY_ACCENTS = ["from-emerald-100 to-teal-50", "from-amber-100 to-orange-50", "from-sky-100 to-cyan-50"];
@@ -90,6 +115,29 @@ const historySummary = computed(() => {
 const flaggedItems = computed(() => galleryCards.value.filter((item) => item.flagged));
 const favoriteItems = computed(() => galleryCards.value.filter((item) => item.favorite));
 
+const selectedDetectionMeta = computed(() => {
+  const item = selectedDetection.value;
+  if (!item) return null;
+  const waste = classifyWaste(item.className);
+  return {
+    ...waste,
+    confidenceLevel: confidenceLevel(item.confidence),
+    confidenceHint: confidenceHint(item.confidence)
+  };
+});
+
+const detectionSummary = computed(() => {
+  const byCategory = classSummary.value.map((item) => ({
+    ...item,
+    wasteCategory: classifyWaste(item.className).category
+  }));
+  return {
+    total: detectionList.value.length,
+    lowConfidenceCount: stats.value.lowConfidenceCount,
+    byCategory
+  };
+});
+
 const galleryCards = computed(() => galleryItems.value.map((item, index) => ({
   ...item,
   imageUrl: withToken(item.imageUrl),
@@ -113,10 +161,10 @@ const overlayBoxes = computed(() => {
 });
 
 const dashboardCards = computed(() => [
-  { label: "识别目标数", value: String(stats.value.count), hint: "当前图像中的垃圾实例数量" },
-  { label: "平均置信度", value: formatPercent(stats.value.avgConfidence), hint: "用于发现低置信度样本" },
-  { label: "图库图片数", value: String(historySummary.value.total), hint: "支持历史回放和再次识别" },
-  { label: "当前推理时延", value: detection.value ? `${detection.value.latencyMs} ms` : "--", hint: "适合作为论文性能指标" }
+  { label: "累计图片数", value: String(overviewStats.value.totalImages || 0), hint: "系统已保存的图片记录" },
+  { label: "累计识别目标", value: String(overviewStats.value.totalDetectedObjects || 0), hint: "用于体现系统处理规模" },
+  { label: "错误样本数", value: String(overviewStats.value.flaggedCount || 0), hint: "支持误检漏检回流分析" },
+  { label: "平均推理时延", value: `${overviewStats.value.avgLatencyMs || 0} ms`, hint: "适合作为论文性能指标" }
 ]);
 
 function formatPercent(value) {
@@ -127,19 +175,6 @@ function formatDate(value) {
   if (!value) return "--";
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
-}
-
-function loadExperimentRuns() {
-  try {
-    const raw = localStorage.getItem("waste-ai-experiments");
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function persistExperimentRuns() {
-  localStorage.setItem("waste-ai-experiments", JSON.stringify(experimentRuns.value));
 }
 
 function withToken(url) {
@@ -178,11 +213,30 @@ async function refreshWorkspaceData() {
   if (!isAuthenticated.value) {
     historyItems.value = [];
     galleryItems.value = [];
+    experimentRuns.value = [];
     return;
   }
-  const [history, gallery] = await Promise.all([getHistory(12), getGallery(16)]);
+  const [history, gallery, statsResp, experimentsResp] = await Promise.all([
+    getHistory({ limit: 12 }),
+    getGallery({ limit: 24, ...buildGalleryQuery() }),
+    getOverviewStats(),
+    listExperiments()
+  ]);
   historyItems.value = history.items || [];
   galleryItems.value = gallery.items || [];
+  overviewStats.value = statsResp || overviewStats.value;
+  experimentRuns.value = experimentsResp.items || [];
+}
+
+function buildGalleryQuery() {
+  return {
+    keyword: galleryFilters.value.keyword || undefined,
+    className: galleryFilters.value.className || undefined,
+    favorite: galleryFilters.value.favorite === "" ? undefined : galleryFilters.value.favorite === "true",
+    flagged: galleryFilters.value.flagged === "" ? undefined : galleryFilters.value.flagged === "true",
+    reviewType: galleryFilters.value.reviewType || undefined,
+    minConfidence: galleryFilters.value.minConfidence || undefined
+  };
 }
 
 async function bootstrap() {
@@ -241,6 +295,7 @@ function logoutAction() {
   currentUser.value = null;
   historyItems.value = [];
   galleryItems.value = [];
+  experimentRuns.value = [];
   viewerItem.value = null;
   clearPreviewUrl();
   previewUrl.value = "";
@@ -392,36 +447,49 @@ function setWorkspaceFilter(key, value) {
   selectedDetectionIndex.value = 0;
 }
 
+function setGalleryFilter(key, value) {
+  galleryFilters.value = { ...galleryFilters.value, [key]: value };
+}
+
 function setPreviewScale(value) {
   previewScale.value = value;
 }
 
-function saveExperimentRun() {
+async function saveExperimentRun() {
   if (!detection.value) {
     setError("请先完成一次识别后再保存实验。");
     return;
   }
-  experimentRuns.value = [
-    {
-      id: `${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      imageId: imageId.value,
-      imageUrl: previewUrl.value,
+  try {
+    error.value = "";
+    const saved = await createExperiment({
+      imageId: imageId.value || null,
       modelVersion: detection.value.modelVersion,
+      imgsz: detectOptions.value.imgsz,
+      conf: detectOptions.value.conf,
+      iou: detectOptions.value.iou,
       latencyMs: detection.value.latencyMs,
       boxCount: detectionList.value.length,
-      topClass: stats.value.top,
-      detectOptions: { ...detectOptions.value },
-      filters: { ...workspaceFilters.value }
-    },
-    ...experimentRuns.value
-  ].slice(0, 20);
-  persistExperimentRuns();
+      avgConfidence: Number(stats.value.avgConfidence || 0),
+      topClass: selectedDetection.value?.className || detectionSummary.value.byCategory[0]?.className || null,
+      minConfidenceFilter: workspaceFilters.value.minConfidence,
+      classKeywordFilter: workspaceFilters.value.classKeyword,
+      note: experimentNote.value
+    });
+    experimentRuns.value = [saved, ...experimentRuns.value].slice(0, 50);
+    experimentNote.value = "";
+  } catch (e) {
+    setError(e?.response?.data?.message || e.message || "实验记录保存失败。");
+  }
 }
 
-function clearExperimentRuns() {
-  experimentRuns.value = [];
-  persistExperimentRuns();
+async function clearExperimentRuns() {
+  try {
+    await Promise.all(experimentRuns.value.map((item) => deleteExperiment(item.id)));
+    experimentRuns.value = [];
+  } catch (e) {
+    setError(e?.response?.data?.message || e.message || "清空实验记录失败。");
+  }
 }
 
 async function updateGalleryItem(imageId, payload) {
@@ -445,6 +513,10 @@ async function toggleFlagged(imageId, nextValue, reviewNote = undefined) {
   await updateGalleryItem(imageId, { flagged: nextValue, reviewNote });
 }
 
+async function updateReviewMeta(imageId, payload) {
+  await updateGalleryItem(imageId, payload);
+}
+
 async function removeImageAction(imageId) {
   try {
     await deleteImage(imageId);
@@ -457,10 +529,6 @@ async function removeImageAction(imageId) {
     setError(e?.response?.data?.message || e.message || "删除图片失败。");
   }
 }
-
-returnExport();
-
-function returnExport() {}
 
 export function useAppStore() {
   return {
@@ -487,16 +555,21 @@ export function useAppStore() {
     viewerItem,
     detectOptions,
     workspaceFilters,
+    galleryFilters,
     previewScale,
     experimentRuns,
+    experimentNote,
     isAuthenticated,
     stats,
     classSummary,
     historySummary,
+    overviewStats,
     flaggedItems,
     favoriteItems,
     overlayBoxes,
     dashboardCards,
+    detectionSummary,
+    selectedDetectionMeta,
     formatPercent,
     formatDate,
     bootstrap,
@@ -516,11 +589,13 @@ export function useAppStore() {
     reopenFromGallery,
     setDetectOption,
     setWorkspaceFilter,
+    setGalleryFilter,
     setPreviewScale,
     saveExperimentRun,
     clearExperimentRuns,
     toggleFavorite,
     toggleFlagged,
+    updateReviewMeta,
     removeImageAction,
     resetWorkspaceFilters,
     withToken,

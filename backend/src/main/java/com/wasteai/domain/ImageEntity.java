@@ -42,6 +42,12 @@ public class ImageEntity {
     @Column(length = 500)
     private String reviewNote;
 
+    @Column(length = 64)
+    private String reviewType;
+
+    @Column(length = 128)
+    private String correctedClass;
+
     @Column(nullable = false)
     private Boolean deleted = false;
 
@@ -107,6 +113,22 @@ public class ImageEntity {
 
     public void setReviewNote(String reviewNote) {
         this.reviewNote = reviewNote;
+    }
+
+    public String getReviewType() {
+        return reviewType;
+    }
+
+    public void setReviewType(String reviewType) {
+        this.reviewType = reviewType;
+    }
+
+    public String getCorrectedClass() {
+        return correctedClass;
+    }
+
+    public void setCorrectedClass(String correctedClass) {
+        this.correctedClass = correctedClass;
     }
 
     public Boolean getDeleted() {

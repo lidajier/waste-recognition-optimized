@@ -19,7 +19,15 @@ public class GalleryController {
     }
 
     @GetMapping("/gallery")
-    public ResponseEntity<GalleryResponse> gallery(@RequestParam(defaultValue = "12") int limit) {
-        return ResponseEntity.ok(galleryService.getGallery(limit));
+    public ResponseEntity<GalleryResponse> gallery(
+            @RequestParam(defaultValue = "12") int limit,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String className,
+            @RequestParam(required = false) Boolean favorite,
+            @RequestParam(required = false) Boolean flagged,
+            @RequestParam(required = false) String reviewType,
+            @RequestParam(required = false) Float minConfidence
+    ) {
+        return ResponseEntity.ok(galleryService.getGallery(limit, keyword, className, favorite, flagged, reviewType, minConfidence));
     }
 }

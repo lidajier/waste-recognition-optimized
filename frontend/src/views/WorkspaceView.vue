@@ -76,6 +76,7 @@ async function generateAdvice() {
       </div>
 
       <div class="mt-4 flex flex-wrap gap-3">
+        <input :value="store.experimentNote.value" class="field-input max-w-xl" type="text" placeholder="实验备注，例如：提高 conf 后误检减少" @input="store.experimentNote.value = $event.target.value" />
         <button class="secondary-btn" @click="store.saveExperimentRun">保存当前实验结果</button>
         <div class="soft-panel text-sm text-slate-600">已记录实验 {{ store.experimentRuns.value.length }} 组</div>
       </div>
@@ -119,6 +120,29 @@ async function generateAdvice() {
           </div>
         </button>
         <div v-if="!store.detectionList.value.length" class="soft-panel text-sm text-slate-500">识别后，这里会出现实例列表。</div>
+      </div>
+
+      <div v-if="store.selectedDetection.value" class="soft-panel mt-5 text-sm text-slate-600">
+        <div class="text-xs uppercase tracking-[0.2em] text-slate-400">实例详情</div>
+        <div class="mt-3 text-lg font-semibold text-slate-900">{{ store.selectedDetection.value.className }}</div>
+        <div class="mt-2">分类归属：<span class="font-semibold" :style="{ color: store.selectedDetectionMeta.value?.color }">{{ store.selectedDetectionMeta.value?.category }}</span></div>
+        <div class="mt-2">置信度等级：{{ store.selectedDetectionMeta.value?.confidenceLevel }}（{{ store.formatPercent(store.selectedDetection.value.confidence) }}）</div>
+        <div class="mt-2">提示：{{ store.selectedDetectionMeta.value?.confidenceHint }}</div>
+        <div class="mt-2">投放建议：{{ store.selectedDetectionMeta.value?.tips }}</div>
+      </div>
+
+      <div v-if="store.detectionSummary.value.total" class="soft-panel mt-5 text-sm text-slate-600">
+        <div class="text-xs uppercase tracking-[0.2em] text-slate-400">识别摘要</div>
+        <div class="mt-3">本图共识别 {{ store.detectionSummary.value.total }} 个目标，低置信度目标 {{ store.detectionSummary.value.lowConfidenceCount }} 个。</div>
+        <div class="mt-3 space-y-2">
+          <div v-for="item in store.detectionSummary.value.byCategory" :key="item.className" class="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-2">
+            <div>
+              <div class="font-semibold text-slate-900">{{ item.className }}</div>
+              <div class="text-xs text-slate-500">{{ item.wasteCategory }}</div>
+            </div>
+            <div class="text-sm text-slate-500">{{ item.count }} 个实例</div>
+          </div>
+        </div>
       </div>
 
       <button class="secondary-btn mt-4 w-full" @click="store.resetWorkspaceFilters">重置筛选和缩放</button>

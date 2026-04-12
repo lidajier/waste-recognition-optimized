@@ -9,6 +9,9 @@ public record HistoryItemDto(
         String imageUrl,
         Boolean favorite,
         Boolean flagged,
+        String reviewNote,
+        String reviewType,
+        String correctedClass,
         String detectionId,
         String modelVersion,
         Long latencyMs,
@@ -16,6 +19,9 @@ public record HistoryItemDto(
         String topClass,
         Float topConfidence,
         String advicePreview,
+        Integer imgsz,
+        Float conf,
+        Float iou,
         LocalDateTime createdAt
 ) {
 }

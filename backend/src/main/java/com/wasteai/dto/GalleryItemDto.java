@@ -9,6 +9,8 @@ public record GalleryItemDto(
         Boolean favorite,
         Boolean flagged,
         String reviewNote,
+        String reviewType,
+        String correctedClass,
         String detectionId,
         String sessionId,
         String modelVersion,
@@ -17,6 +19,9 @@ public record GalleryItemDto(
         String topClass,
         Float topConfidence,
         String advicePreview,
+        Integer imgsz,
+        Float conf,
+        Float iou,
         LocalDateTime uploadedAt
 ) {
 }

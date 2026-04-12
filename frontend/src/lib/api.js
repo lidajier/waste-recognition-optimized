@@ -91,12 +91,12 @@ export async function getSession(sessionId) {
 }
 
 export async function getHistory(limit = 10) {
-  const { data } = await client.get(`/history?limit=${limit}`);
+  const { data } = await client.get("/history", { params: limit });
   return data;
 }
 
 export async function getGallery(limit = 12) {
-  const { data } = await client.get(`/gallery?limit=${limit}`);
+  const { data } = await client.get("/gallery", { params: limit });
   return data;
 }
 
@@ -107,4 +107,23 @@ export async function updateImage(imageId, payload) {
 
 export async function deleteImage(imageId) {
   await client.delete(`/files/${imageId}`);
+}
+
+export async function getOverviewStats() {
+  const { data } = await client.get("/stats/overview");
+  return data;
+}
+
+export async function listExperiments() {
+  const { data } = await client.get("/experiments");
+  return data;
+}
+
+export async function createExperiment(payload) {
+  const { data } = await client.post("/experiments", payload);
+  return data;
+}
+
+export async function deleteExperiment(id) {
+  await client.delete(`/experiments/${id}`);
 }

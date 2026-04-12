@@ -43,13 +43,59 @@ public class GalleryService {
 
     @Transactional(readOnly = true)
     public GalleryResponse getGallery(int limit) {
+        return getGallery(limit, null, null, null, null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public GalleryResponse getGallery(int limit, String keyword, String className, Boolean favorite, Boolean flagged, String reviewType, Float minConfidence) {
         int safeLimit = Math.min(Math.max(limit, 1), 60);
         UserEntity user = authService.requireCurrentUser();
         List<GalleryItemDto> items = imageRepository.findByUploadedBy_IdAndDeletedFalseOrderByUploadedAtDesc(user.getId()).stream()
-                .limit(safeLimit)
                 .map(this::toItem)
+                .filter(item -> matches(item, keyword, className, favorite, flagged, reviewType, minConfidence))
+                .limit(safeLimit)
                 .toList();
         return new GalleryResponse(items);
+    }
+
+    private boolean matches(GalleryItemDto item, String keyword, String className, Boolean favorite, Boolean flagged, String reviewType, Float minConfidence) {
+        if (favorite != null && !favorite.equals(item.favorite())) {
+            return false;
+        }
+        if (flagged != null && !flagged.equals(item.flagged())) {
+            return false;
+        }
+        if (reviewType != null && !reviewType.isBlank()) {
+            String normalized = reviewType.trim().toLowerCase();
+            if (item.reviewType() == null || !item.reviewType().toLowerCase().contains(normalized)) {
+                return false;
+            }
+        }
+        if (className != null && !className.isBlank()) {
+            String normalized = className.trim().toLowerCase();
+            if (item.topClass() == null || !item.topClass().toLowerCase().contains(normalized)) {
+                return false;
+            }
+        }
+        if (minConfidence != null && (item.topConfidence() == null || item.topConfidence() < minConfidence)) {
+            return false;
+        }
+        if (keyword != null && !keyword.isBlank()) {
+            String normalized = keyword.trim().toLowerCase();
+            boolean matched = contains(item.imageName(), normalized)
+                    || contains(item.topClass(), normalized)
+                    || contains(item.advicePreview(), normalized)
+                    || contains(item.reviewNote(), normalized)
+                    || contains(item.correctedClass(), normalized);
+            if (!matched) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean contains(String value, String keyword) {
+        return value != null && value.toLowerCase().contains(keyword);
     }
 
     private GalleryItemDto toItem(ImageEntity image) {
@@ -71,6 +117,8 @@ public class GalleryService {
                 image.getFavorite(),
                 image.getFlagged(),
                 image.getReviewNote(),
+                image.getReviewType(),
+                image.getCorrectedClass(),
                 detection == null ? null : detection.getId().toString(),
                 session == null ? null : session.getId().toString(),
                 detection == null ? null : detection.getModelVersion(),
@@ -79,6 +127,9 @@ public class GalleryService {
                 topItem == null ? null : topItem.getClassName(),
                 topItem == null ? null : topItem.getConfidence(),
                 preview,
+                detection == null ? null : detection.getImgsz(),
+                detection == null ? null : detection.getConf(),
+                detection == null ? null : detection.getIou(),
                 image.getUploadedAt()
         );
     }

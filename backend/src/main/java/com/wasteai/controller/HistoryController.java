@@ -19,7 +19,15 @@ public class HistoryController {
     }
 
     @GetMapping("/history")
-    public ResponseEntity<HistoryResponse> history(@RequestParam(defaultValue = "10") int limit) {
-        return ResponseEntity.ok(historyService.getRecentHistory(limit));
+    public ResponseEntity<HistoryResponse> history(
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String className,
+            @RequestParam(required = false) Boolean favorite,
+            @RequestParam(required = false) Boolean flagged,
+            @RequestParam(required = false) String reviewType,
+            @RequestParam(required = false) Float minConfidence
+    ) {
+        return ResponseEntity.ok(historyService.getRecentHistory(limit, keyword, className, favorite, flagged, reviewType, minConfidence));
     }
 }
