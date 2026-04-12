@@ -9,22 +9,19 @@ if str(ULTRALYTICS_SRC) not in sys.path:
 from ultralytics import YOLO
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-MODEL_CFG = REPO_ROOT / "inference-service" / "models" / "yolov8-cbam.yaml"
 DATA_CFG = Path(r"D:/ultralytics/yolo_garbage/dataset.yaml")
 PROJECT_DIR = Path(r"D:/ultralytics/runs/cbam_experiments")
 
 
 def main():
-    model = YOLO(str(MODEL_CFG))
+    model = YOLO("yolov8s.pt")
     model.train(
         data=str(DATA_CFG),
         epochs=100,
         imgsz=640,
         batch=8,
         project=str(PROJECT_DIR),
-        name="yolov8s_cbam_waste",
-        pretrained="yolov8s.pt",
+        name="yolov8s_baseline_waste",
         workers=2,
         patience=20,
         device="cpu",

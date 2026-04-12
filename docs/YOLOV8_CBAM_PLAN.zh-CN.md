@@ -45,6 +45,7 @@
 - 标签文件中包含注释行，属于可解释格式，不应直接判为错误
 - `yolo_garbage` 中存在大量重复的图像-标签对，需先做去重再训练
 - 已提供安全去重脚本：`scripts/dedupe_yolo_garbage.py`
+- 已提供标签清洗脚本：`scripts/clean_yolo_garbage_labels.py`
 
 ## 6. 数据清洗建议
 
@@ -58,12 +59,15 @@
 
 ```bat
 python scripts/dedupe_yolo_garbage.py
+python scripts/clean_yolo_garbage_labels.py
 ```
 
 执行后会生成：
 
 - 备份目录：`D:\ultralytics\yolo_garbage_dedupe_backup_20260412`
 - 去重报告：`docs/yolo_garbage_dedupe_report.json`
+- 标签备份目录：`D:\ultralytics\yolo_garbage_label_backup_20260412`
+- 标签清洗报告：`docs/yolo_garbage_label_clean_report.json`
 
 ## 7. 训练入口
 
