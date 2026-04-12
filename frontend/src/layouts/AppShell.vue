@@ -31,13 +31,7 @@ function logout() {
 <template>
   <div class="app-wrap">
     <aside class="sidebar-card">
-      <div>
-        <div class="brand-pill">Waste Vision</div>
-        <h1 class="mt-4 font-display text-3xl text-slate-900">路由化智能垃圾系统</h1>
-        <p class="mt-3 text-sm leading-7 text-slate-600">登录后进入系统，按页面路由拆分总览、识别、对话和图库，结构更适合毕业设计演示。</p>
-      </div>
-
-      <nav class="mt-8 space-y-2">
+      <nav class="space-y-2">
         <RouterLink v-for="item in navItems" :key="item.to" :to="item.to" class="nav-link">
           {{ item.label }}
         </RouterLink>
