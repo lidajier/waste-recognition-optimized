@@ -24,9 +24,13 @@ public class InferenceClient {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final String inferUrl;
+    private final String modelUploadUrl;
+    private final String modelInfoUrl;
 
     public InferenceClient(AppProperties properties) {
         this.inferUrl = properties.getInference().getBaseUrl() + "/infer";
+        this.modelUploadUrl = properties.getInference().getBaseUrl() + "/model/upload";
+        this.modelInfoUrl = properties.getInference().getBaseUrl() + "/model";
     }
 
     public InferenceResponse infer(Path imagePath, int imgsz, float conf, float iou) {
@@ -65,6 +69,43 @@ public class InferenceClient {
         }
     }
 
+    public ModelInfo uploadModel(Path modelPath) {
+        try {
+            byte[] modelBytes = Files.readAllBytes(modelPath);
+            ByteArrayResource resource = new ByteArrayResource(modelBytes) {
+                @Override
+                public String getFilename() {
+                    return modelPath.getFileName().toString();
+                }
+            };
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", resource);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+            ResponseEntity<ModelInfo> response = restTemplate.postForEntity(modelUploadUrl, requestEntity, ModelInfo.class);
+            if (response.getBody() == null) {
+                throw new IllegalStateException("Model upload returned empty response.");
+            }
+            return response.getBody();
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to read model file.", e);
+        } catch (Exception e) {
+            throw new IllegalStateException("Model upload failed: " + e.getMessage(), e);
+        }
+    }
+
+    public ModelInfo getCurrentModel() {
+        ResponseEntity<ModelInfo> response = restTemplate.getForEntity(modelInfoUrl, ModelInfo.class);
+        if (response.getBody() == null) {
+            throw new IllegalStateException("Model info returned empty response.");
+        }
+        return response.getBody();
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class InferenceResponse {
         @JsonProperty("model_version")
@@ -96,5 +137,14 @@ public class InferenceClient {
 
         @JsonProperty("y2")
         public float y2;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ModelInfo {
+        @JsonProperty("model_path")
+        public String modelPath;
+
+        @JsonProperty("model_version")
+        public String modelVersion;
     }
 }

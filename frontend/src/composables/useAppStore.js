@@ -7,6 +7,7 @@ import {
   generateAdvice,
   getGallery,
   getHistory,
+  getCurrentModel,
   getMe,
   getOverviewStats,
   getSession,
@@ -18,6 +19,7 @@ import {
   sendChat,
   setToken,
   updateImage,
+  uploadModel,
   uploadImage
 } from "../lib/api";
 import { classifyWaste, confidenceHint, confidenceLevel } from "../lib/wasteMeta";
@@ -66,6 +68,8 @@ const galleryFilters = ref({
   reviewType: "",
   minConfidence: 0
 });
+const currentModelInfo = ref({ modelPath: "", modelVersion: "未加载" });
+const modelUploadLoading = ref(false);
 
 const BOX_COLORS = ["#52c7a5", "#ffbf69", "#6ea8fe", "#ff8a8a", "#b692ff", "#66d9ef"];
 const GALLERY_ACCENTS = ["from-emerald-100 to-teal-50", "from-amber-100 to-orange-50", "from-sky-100 to-cyan-50"];
@@ -226,6 +230,11 @@ async function refreshWorkspaceData() {
   galleryItems.value = gallery.items || [];
   overviewStats.value = statsResp || overviewStats.value;
   experimentRuns.value = experimentsResp.items || [];
+  try {
+    currentModelInfo.value = await getCurrentModel();
+  } catch {
+    currentModelInfo.value = { modelPath: "", modelVersion: "未加载" };
+  }
 }
 
 function buildGalleryQuery() {
@@ -517,6 +526,25 @@ async function updateReviewMeta(imageId, payload) {
   await updateGalleryItem(imageId, payload);
 }
 
+async function uploadModelAction(file) {
+  if (!file) {
+    setError("请先选择模型文件。");
+    return false;
+  }
+  modelUploadLoading.value = true;
+  error.value = "";
+  try {
+    currentModelInfo.value = await uploadModel(file);
+    await refreshWorkspaceData();
+    return true;
+  } catch (e) {
+    setError(e?.response?.data?.message || e.message || "模型上传失败。");
+    return false;
+  } finally {
+    modelUploadLoading.value = false;
+  }
+}
+
 async function removeImageAction(imageId) {
   try {
     await deleteImage(imageId);
@@ -564,6 +592,8 @@ export function useAppStore() {
     classSummary,
     historySummary,
     overviewStats,
+    currentModelInfo,
+    modelUploadLoading,
     flaggedItems,
     favoriteItems,
     overlayBoxes,
@@ -596,6 +626,7 @@ export function useAppStore() {
     toggleFavorite,
     toggleFlagged,
     updateReviewMeta,
+    uploadModelAction,
     removeImageAction,
     resetWorkspaceFilters,
     withToken,

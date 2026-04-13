@@ -2,8 +2,9 @@ import os
 import tempfile
 import time
 from pathlib import Path
+from threading import Lock
 
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 from ultralytics import YOLO
 
@@ -23,8 +24,17 @@ class InferResponse(BaseModel):
     detections: list[Detection]
 
 
+class ModelInfo(BaseModel):
+    model_path: str
+    model_version: str
+
+
+MODEL_LOCK = Lock()
 MODEL_PATH = Path(os.getenv("MODEL_PATH", "../../exp-2.pt")).resolve()
+MODELS_DIR = Path(os.getenv("MODELS_DIR", "../models")).resolve()
+MODELS_DIR.mkdir(parents=True, exist_ok=True)
 MODEL = YOLO(str(MODEL_PATH))
+
 
 app = FastAPI(title="Waste Inference Service", version="0.1.0")
 
@@ -32,6 +42,50 @@ app = FastAPI(title="Waste Inference Service", version="0.1.0")
 @app.get("/health")
 def health():
     return {"status": "ok", "model_path": str(MODEL_PATH)}
+
+
+@app.get("/model", response_model=ModelInfo)
+def current_model():
+    return ModelInfo(model_path=str(MODEL_PATH), model_version=MODEL_PATH.name)
+
+
+@app.post("/model/upload", response_model=ModelInfo)
+async def upload_model(file: UploadFile = File(...)):
+    suffix = Path(file.filename or "model.pt").suffix.lower()
+    if suffix not in {".pt", ".onnx"}:
+        raise HTTPException(status_code=400, detail="Only .pt or .onnx model files are supported.")
+
+    target = MODELS_DIR / f"{int(time.time())}_{Path(file.filename or 'model.pt').name}"
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(await file.read())
+        tmp_path = Path(tmp.name)
+
+    try:
+        target.write_bytes(tmp_path.read_bytes())
+        switch_model_internal(target)
+        return ModelInfo(model_path=str(MODEL_PATH), model_version=MODEL_PATH.name)
+    except Exception as e:
+        target.unlink(missing_ok=True)
+        raise HTTPException(status_code=400, detail=f"Model upload failed: {e}")
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+
+@app.post("/model/use", response_model=ModelInfo)
+def use_model(payload: ModelInfo):
+    path = Path(payload.model_path).resolve()
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Model file not found.")
+    switch_model_internal(path)
+    return ModelInfo(model_path=str(MODEL_PATH), model_version=MODEL_PATH.name)
+
+
+def switch_model_internal(path: Path):
+    global MODEL_PATH, MODEL
+    with MODEL_LOCK:
+        model = YOLO(str(path))
+        MODEL = model
+        MODEL_PATH = path
 
 
 @app.post("/infer", response_model=InferResponse)
@@ -48,13 +102,14 @@ async def infer(
 
     started = time.time()
     try:
-        results = MODEL.predict(
-            source=str(tmp_path),
-            imgsz=imgsz,
-            conf=conf,
-            iou=iou,
-            verbose=False,
-        )
+        with MODEL_LOCK:
+            results = MODEL.predict(
+                source=str(tmp_path),
+                imgsz=imgsz,
+                conf=conf,
+                iou=iou,
+                verbose=False,
+            )
         elapsed_ms = int((time.time() - started) * 1000)
 
         detections: list[Detection] = []

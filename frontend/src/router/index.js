@@ -5,6 +5,7 @@ import AssistantView from "../views/AssistantView.vue";
 import ExperimentsView from "../views/ExperimentsView.vue";
 import GalleryView from "../views/GalleryView.vue";
 import LoginView from "../views/LoginView.vue";
+import ModelsView from "../views/ModelsView.vue";
 import OverviewView from "../views/OverviewView.vue";
 import ReviewView from "../views/ReviewView.vue";
 import WorkspaceView from "../views/WorkspaceView.vue";
@@ -30,6 +31,7 @@ const router = createRouter({
         { path: "overview", component: OverviewView },
         { path: "workspace", component: WorkspaceView },
         { path: "assistant", component: AssistantView },
+        { path: "models", component: ModelsView },
         { path: "gallery", component: GalleryView },
         { path: "review", component: ReviewView },
         { path: "experiments", component: ExperimentsView }

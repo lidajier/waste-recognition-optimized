@@ -127,3 +127,20 @@ export async function createExperiment(payload) {
 export async function deleteExperiment(id) {
   await client.delete(`/experiments/${id}`);
 }
+
+export async function uploadModel(file) {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await client.post("/models/upload", form, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: authToken ? `Bearer ${authToken}` : undefined
+    }
+  });
+  return data;
+}
+
+export async function getCurrentModel() {
+  const { data } = await client.get("/models/current");
+  return data;
+}

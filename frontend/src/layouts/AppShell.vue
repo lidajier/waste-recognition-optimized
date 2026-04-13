@@ -10,6 +10,7 @@ const navItems = [
   { to: "/app/overview", label: "总览" },
   { to: "/app/workspace", label: "识别工作台" },
   { to: "/app/assistant", label: "AI 对话" },
+  { to: "/app/models", label: "模型管理" },
   { to: "/app/gallery", label: "历史图库" },
   { to: "/app/review", label: "错误样本" },
   { to: "/app/experiments", label: "模型实验" }
