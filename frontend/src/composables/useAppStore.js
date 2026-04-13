@@ -12,6 +12,7 @@ import {
   getOverviewStats,
   getSession,
   getToken,
+  listModels,
   listExperiments,
   login,
   register,
@@ -20,6 +21,7 @@ import {
   setToken,
   updateImage,
   uploadModel,
+  useModel,
   uploadImage
 } from "../lib/api";
 import { classifyWaste, confidenceHint, confidenceLevel } from "../lib/wasteMeta";
@@ -69,6 +71,7 @@ const galleryFilters = ref({
   minConfidence: 0
 });
 const currentModelInfo = ref({ modelPath: "", modelVersion: "未加载" });
+const availableModels = ref([]);
 const modelUploadLoading = ref(false);
 
 const BOX_COLORS = ["#52c7a5", "#ffbf69", "#6ea8fe", "#ff8a8a", "#b692ff", "#66d9ef"];
@@ -232,8 +235,10 @@ async function refreshWorkspaceData() {
   experimentRuns.value = experimentsResp.items || [];
   try {
     currentModelInfo.value = await getCurrentModel();
+    availableModels.value = await listModels();
   } catch {
     currentModelInfo.value = { modelPath: "", modelVersion: "未加载" };
+    availableModels.value = [];
   }
 }
 
@@ -545,6 +550,21 @@ async function uploadModelAction(file) {
   }
 }
 
+async function useModelAction(modelPath) {
+  modelUploadLoading.value = true;
+  error.value = "";
+  try {
+    currentModelInfo.value = await useModel(modelPath);
+    await refreshWorkspaceData();
+    return true;
+  } catch (e) {
+    setError(e?.response?.data?.message || e.message || "模型切换失败。");
+    return false;
+  } finally {
+    modelUploadLoading.value = false;
+  }
+}
+
 async function removeImageAction(imageId) {
   try {
     await deleteImage(imageId);
@@ -593,6 +613,7 @@ export function useAppStore() {
     historySummary,
     overviewStats,
     currentModelInfo,
+    availableModels,
     modelUploadLoading,
     flaggedItems,
     favoriteItems,
@@ -627,6 +648,7 @@ export function useAppStore() {
     toggleFlagged,
     updateReviewMeta,
     uploadModelAction,
+    useModelAction,
     removeImageAction,
     resetWorkspaceFilters,
     withToken,

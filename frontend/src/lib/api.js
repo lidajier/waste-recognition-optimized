@@ -144,3 +144,13 @@ export async function getCurrentModel() {
   const { data } = await client.get("/models/current");
   return data;
 }
+
+export async function listModels() {
+  const { data } = await client.get("/models");
+  return data;
+}
+
+export async function useModel(modelPath) {
+  const { data } = await client.post("/models/use", { modelPath });
+  return data;
+}

@@ -29,6 +29,10 @@ class ModelInfo(BaseModel):
     model_version: str
 
 
+class ModelUseRequest(BaseModel):
+    model_path: str
+
+
 MODEL_LOCK = Lock()
 MODEL_PATH = Path(os.getenv("MODEL_PATH", "../../exp-2.pt")).resolve()
 MODELS_DIR = Path(os.getenv("MODELS_DIR", "../models")).resolve()
@@ -49,30 +53,8 @@ def current_model():
     return ModelInfo(model_path=str(MODEL_PATH), model_version=MODEL_PATH.name)
 
 
-@app.post("/model/upload", response_model=ModelInfo)
-async def upload_model(file: UploadFile = File(...)):
-    suffix = Path(file.filename or "model.pt").suffix.lower()
-    if suffix not in {".pt", ".onnx"}:
-        raise HTTPException(status_code=400, detail="Only .pt or .onnx model files are supported.")
-
-    target = MODELS_DIR / f"{int(time.time())}_{Path(file.filename or 'model.pt').name}"
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        tmp.write(await file.read())
-        tmp_path = Path(tmp.name)
-
-    try:
-        target.write_bytes(tmp_path.read_bytes())
-        switch_model_internal(target)
-        return ModelInfo(model_path=str(MODEL_PATH), model_version=MODEL_PATH.name)
-    except Exception as e:
-        target.unlink(missing_ok=True)
-        raise HTTPException(status_code=400, detail=f"Model upload failed: {e}")
-    finally:
-        tmp_path.unlink(missing_ok=True)
-
-
 @app.post("/model/use", response_model=ModelInfo)
-def use_model(payload: ModelInfo):
+def use_model(payload: ModelUseRequest):
     path = Path(payload.model_path).resolve()
     if not path.exists():
         raise HTTPException(status_code=404, detail="Model file not found.")

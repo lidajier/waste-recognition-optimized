@@ -12,6 +12,10 @@ function onFileChange(event) {
 async function uploadModel() {
   await store.uploadModelAction(selectedModel.value);
 }
+
+async function useModel(item) {
+  await store.useModelAction(item.modelPath);
+}
 </script>
 
 <template>
@@ -34,6 +38,23 @@ async function uploadModel() {
         <button class="primary-btn xl:w-56" :disabled="store.modelUploadLoading.value" @click="uploadModel">
           {{ store.modelUploadLoading.value ? '上传中...' : '上传并启用模型' }}
         </button>
+      </div>
+
+      <div class="mt-8">
+        <div class="section-kicker">History</div>
+        <h3 class="section-title">历史模型</h3>
+        <div class="mt-4 grid gap-4">
+          <div v-for="item in store.availableModels.value" :key="item.modelPath" class="soft-panel flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <div class="font-semibold text-slate-900">{{ item.modelVersion }}</div>
+              <div class="mt-2 break-all text-xs text-slate-500">{{ item.modelPath }}</div>
+            </div>
+            <button class="secondary-btn" :disabled="store.modelUploadLoading.value" @click="useModel(item)">
+              设为当前模型
+            </button>
+          </div>
+          <div v-if="!store.availableModels.value.length" class="soft-panel text-sm text-slate-500">暂无历史模型记录。</div>
+        </div>
       </div>
     </article>
   </section>
