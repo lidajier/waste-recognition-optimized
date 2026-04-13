@@ -4,9 +4,9 @@
 
 - 实验日期：
 - 数据集：`D:\ultralytics\yolo_garbage`
-- 图像尺寸：`640`
-- 训练轮数：`100`
-- batch：`8`
+- 图像尺寸：`512`
+- 训练轮数：`5`
+- batch：`4`
 - device：`cpu`
 
 ## 2. 对比模型
@@ -20,11 +20,11 @@
 
 | 参数项 | 数值 |
 |---|---|
-| epochs | 100 |
-| imgsz | 640 |
-| batch | 8 |
-| workers | 2 |
-| patience | 20 |
+| epochs | 5 |
+| imgsz | 512 |
+| batch | 4 |
+| workers | 0 |
+| patience | 5 |
 | optimizer | 默认 |
 
 ## 4. 结果记录表

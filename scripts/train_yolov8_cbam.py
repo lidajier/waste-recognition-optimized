@@ -19,15 +19,16 @@ def main():
     model = YOLO(str(MODEL_CFG))
     model.train(
         data=str(DATA_CFG),
-        epochs=100,
-        imgsz=640,
-        batch=8,
+        epochs=5,
+        imgsz=512,
+        batch=4,
         project=str(PROJECT_DIR),
-        name="yolov8s_cbam_waste",
+        name="yolov8s_cbam_waste_fast",
         pretrained="yolov8s.pt",
-        workers=2,
-        patience=20,
+        workers=0,
+        patience=5,
         device="cpu",
+        cache=True,
     )
 
 

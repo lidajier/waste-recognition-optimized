@@ -17,14 +17,15 @@ def main():
     model = YOLO("yolov8s.pt")
     model.train(
         data=str(DATA_CFG),
-        epochs=100,
-        imgsz=640,
-        batch=8,
+        epochs=5,
+        imgsz=512,
+        batch=4,
         project=str(PROJECT_DIR),
-        name="yolov8s_baseline_waste",
-        workers=2,
-        patience=20,
+        name="yolov8s_baseline_waste_fast",
+        workers=0,
+        patience=5,
         device="cpu",
+        cache=True,
     )
 
 
