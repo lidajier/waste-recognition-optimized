@@ -40,7 +40,7 @@ async function generateAdvice() {
     <article class="content-card lg:col-span-2">
       <div class="section-kicker">Workspace</div>
       <h3 class="section-title">识别工作台</h3>
-      <p class="section-copy">上传图片后，会直接在图上显示目标框，这样你可以清楚说明每一个垃圾实例对应的识别结果。</p>
+      <p class="section-copy">上传图片、查看实例框，并继续生成回收建议。</p>
 
       <div class="mt-6 flex flex-col gap-3 xl:flex-row">
         <label class="upload-panel flex-1">
@@ -52,20 +52,20 @@ async function generateAdvice() {
         </button>
       </div>
 
-      <div class="mt-6 grid gap-4 xl:grid-cols-4">
-        <label class="soft-panel text-sm text-slate-600">
+      <div class="mt-6 workspace-control-grid">
+        <label class="soft-panel text-sm text-slate-600 workspace-control-card">
           输入尺寸
           <input class="field-input mt-3" type="number" min="320" max="1280" step="32" :value="store.detectOptions.value.imgsz" @input="store.setDetectOption('imgsz', Number($event.target.value || 512))" />
         </label>
-        <label class="soft-panel text-sm text-slate-600">
+        <label class="soft-panel text-sm text-slate-600 workspace-control-card">
           置信度阈值
           <input class="field-input mt-3" type="number" min="0" max="1" step="0.05" :value="store.detectOptions.value.conf" @input="store.setDetectOption('conf', Number($event.target.value || 0.25))" />
         </label>
-        <label class="soft-panel text-sm text-slate-600">
+        <label class="soft-panel text-sm text-slate-600 workspace-control-card">
           IoU 阈值
           <input class="field-input mt-3" type="number" min="0" max="1" step="0.05" :value="store.detectOptions.value.iou" @input="store.setDetectOption('iou', Number($event.target.value || 0.7))" />
         </label>
-        <button class="secondary-btn h-full" :disabled="store.loading.value || !store.imageId.value" @click="store.rerunDetectionAction">
+        <button class="secondary-btn h-full workspace-refresh-btn" :disabled="store.loading.value || !store.imageId.value" @click="store.rerunDetectionAction">
           按当前参数重新识别
         </button>
       </div>
@@ -85,10 +85,10 @@ async function generateAdvice() {
         </label>
       </div>
 
-      <div class="mt-4 flex flex-wrap gap-3">
+      <div class="mt-4 workspace-note-row">
         <input :value="store.experimentNote.value" class="field-input max-w-xl" type="text" placeholder="实验备注，例如：提高 conf 后误检减少" @input="store.experimentNote.value = $event.target.value" />
         <button class="secondary-btn" @click="store.saveExperimentRun">保存当前实验结果</button>
-        <div class="soft-panel text-sm text-slate-600">已记录实验 {{ store.experimentRuns.value.length }} 组</div>
+        <div class="soft-panel text-sm text-slate-600 workspace-note-badge">实验记录 {{ store.experimentRuns.value.length }}</div>
       </div>
 
       <div ref="previewAnchor" class="mt-6 image-stage">
@@ -124,7 +124,7 @@ async function generateAdvice() {
               <div class="font-semibold text-slate-900">{{ box.className }}</div>
               <div class="mt-1 text-xs text-slate-500">实例 #{{ index + 1 }}</div>
             </div>
-            <div class="rounded-full bg-white px-3 py-1 text-xs text-slate-700 shadow-sm">
+            <div class="instance-score-pill">
               {{ store.formatPercent(box.confidence) }}
             </div>
           </div>
@@ -145,7 +145,7 @@ async function generateAdvice() {
         <div class="text-xs uppercase tracking-[0.2em] text-slate-400">识别摘要</div>
         <div class="mt-3">本图共识别 {{ store.detectionSummary.value.total }} 个目标，低置信度目标 {{ store.detectionSummary.value.lowConfidenceCount }} 个。</div>
         <div class="mt-3 space-y-2">
-          <div v-for="item in store.detectionSummary.value.byCategory" :key="item.className" class="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-2">
+          <div v-for="item in store.detectionSummary.value.byCategory" :key="item.className" class="workspace-summary-row">
             <div>
               <div class="font-semibold text-slate-900">{{ item.className }}</div>
               <div class="text-xs text-slate-500">{{ item.wasteCategory }}</div>
@@ -158,7 +158,10 @@ async function generateAdvice() {
       <button class="secondary-btn mt-4 w-full" @click="store.resetWorkspaceFilters">重置筛选和缩放</button>
 
       <textarea v-model="store.extraContext.value" rows="4" class="field-input mt-5" placeholder="补充说明，例如：是否有油污、是否在教室或食堂场景拍摄..." />
-      <button class="secondary-btn mt-4 w-full" :disabled="store.loading.value || !store.detection.value" @click="generateAdvice">生成回收建议</button>
+      <button class="secondary-btn action-btn mt-4 w-full" :disabled="store.loading.value || !store.detection.value" @click="generateAdvice">
+        <span v-if="store.loading.value" class="inline-loader" aria-hidden="true"></span>
+        <span>{{ store.loading.value ? '正在生成建议' : '生成回收建议' }}</span>
+      </button>
     </article>
   </section>
 </template>

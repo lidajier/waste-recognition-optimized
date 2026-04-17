@@ -359,7 +359,7 @@ async function uploadAndDetectAction() {
 }
 
 async function generateAdviceAction() {
-  if (!detection.value?.detectionId) {
+  if (!detection.value?.detectionId || detection.value.detectionId === "") {
     setError("当前还没有可用的识别结果。");
     return false;
   }

@@ -21,19 +21,18 @@ async function submit() {
 <template>
   <div class="login-wrap">
     <section class="login-hero">
-      <div class="max-w-2xl">
-        <div class="brand-pill">Waste Vision Platform</div>
+      <div class="login-branding max-w-2xl">
+        <div class="brand-pill">Circular Campus</div>
         <h1 class="mt-6 font-display text-5xl leading-tight text-slate-900 md:text-6xl">
-          先登录，再进入你的垃圾识别与回收指导系统
+          垃圾识别与智能回收指导系统
         </h1>
         <p class="mt-5 max-w-xl text-base leading-8 text-slate-600">
-          这一版把登录页独立成系统外层入口，整体视觉改成更清新、明亮、适合展示和答辩的产品界面。
+          校园场景回收演示平台
         </p>
-        <div class="mt-8 flex flex-wrap gap-3">
-          <span class="soft-badge">账号系统</span>
-          <span class="soft-badge">历史图库</span>
-          <span class="soft-badge">AI 回收对话</span>
-          <span class="soft-badge">实例定位展示</span>
+        <div class="login-badge-row mt-8">
+          <span class="soft-badge">Detection</span>
+          <span class="soft-badge">Guidance</span>
+          <span class="soft-badge">Archive</span>
         </div>
       </div>
 
@@ -57,8 +56,8 @@ async function submit() {
           {{ store.error.value }}
         </div>
 
-        <div class="mt-6 rounded-[24px] bg-emerald-50 p-4 text-sm leading-7 text-slate-600">
-          测试账号也可以继续使用：`demo_user / demo1234`
+        <div class="login-footnote mt-6">
+          demo_user / demo1234
         </div>
       </div>
     </section>

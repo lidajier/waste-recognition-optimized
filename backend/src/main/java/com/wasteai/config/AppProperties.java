@@ -51,9 +51,9 @@ public class AppProperties {
     }
 
     public static class Llm {
-        private String baseUrl = "https://api.openai.com/v1";
-        private String apiKey = "";
-        private String model = "gpt-4o-mini";
+        private String baseUrl = "http://localhost:8317/v1";
+        private String apiKey = "lsx0630";
+        private String model = "gpt-5.4";
         private double temperature = 0.2;
 
         public String getBaseUrl() {
